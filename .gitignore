@@ -1,0 +1,7 @@
+.env
+*.key
+*.db
+__pycache__/
+output/
+inbox/
+demo_inbox/
