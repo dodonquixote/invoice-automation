@@ -15,6 +15,51 @@ process logging, idempotent re-runs), and portable across Windows
 machines — it is run by the reviewer on their own laptop with their
 own mailbox, API key, and unseen invoices.
 
+## Quick start — step by step
+
+Prerequisites: **Python 3.10+** and **Google Chrome**.
+
+1. **Get the code** — clone this repository and open a terminal in the
+   project folder.
+2. **Create a virtual environment** (recommended):
+
+   ```bash
+   python -m venv env
+   env\Scripts\activate        # Windows (PowerShell/CMD)
+   ```
+
+3. **Install dependencies**:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure secrets** — copy `.env.example` to `.env` and fill in
+   the Vision API key and your mailbox credentials (for Gmail use an
+   App Password). Details in *Setup → 1* below.
+5. **Create the ERP form and fill in `Config.xlsx`** — a Google Form
+   or Microsoft Form with the 8 short-answer questions listed in
+   *Setup → 2*; then paste its URL into `FormsUrl`, set
+   `ApproverEmail`, and check `ThresholdAmount`.
+6. **Run it**:
+
+   ```bash
+   python main.py --wait-approval 10
+   ```
+
+   This fetches new invoice emails, processes them, and waits up to
+   10 minutes for approval replies, so approved invoices get posted in
+   the same run. Other modes are listed under *Running*.
+7. **Feed it an invoice** — email an invoice image to the configured
+   mailbox. A matching invoice above the threshold triggers an
+   approval email; reply `APPROVE` (subject unchanged) and the invoice
+   is posted to the form automatically.
+8. **Check the results** — `output/Invoices.xlsx` (all invoices),
+   `output/ERP_Dummy.xlsx` (posted only), `output/ProcessLogs.xlsx`
+   (audit trail), the archived images under
+   `output/Processed/<result>/`, and the form's responses — the same
+   `PostingRef` appears in all of them.
+
 ## Project structure
 
 | File | Responsibility |
@@ -31,9 +76,8 @@ own mailbox, API key, and unseen invoices.
 | `erp_posting.py` | Selenium: fills and submits the ERP simulation form |
 | `exporters.py` | Exports `Invoices.xlsx`, `ERP_Dummy.xlsx`, `ProcessLogs.xlsx` from the database |
 | `samples/` | The 3 sample invoice images from the test pack |
-| `templates/` | The original export templates from the test pack (reference) |
 
-## Setup
+## Setup in detail
 
 Requirements: Python 3.10+, Google Chrome (for the ERP form posting).
 
@@ -117,8 +161,10 @@ credential problem that must be fixed first.
    fields (tolerant to `Rp`, thousand separators `.` or `,`, letter
    case). Missing fields are logged, never guessed.
 3. **Validation** — against `PurchaseOrders.csv`:
-   `MATCH`, `PO_NOT_FOUND`, `VENDOR_MISMATCH`, `AMOUNT_MISMATCH`, or
-   `INCOMPLETE`. Non-matching invoices are rejected and archived.
+   `MATCH`, `PO_NOT_FOUND`, `PO_INACTIVE` (PO exists but is flagged
+   inactive), `VENDOR_MISMATCH`, `AMOUNT_MISMATCH`,
+   `CURRENCY_MISMATCH`, or `INCOMPLETE`. Non-matching invoices are
+   rejected and archived.
 4. **Approval** — matching invoices with `Amount > ThresholdAmount`
    trigger an approval email containing a CorrelationId. The approver
    replies `APPROVE` or `REJECT` (subject unchanged).
