@@ -2,6 +2,8 @@
 *.key
 *.db
 __pycache__/
-output/
-inbox/
+output/*
+!output/.gitkeep
+inbox/*
+!inbox/.gitkeep
 demo_inbox/

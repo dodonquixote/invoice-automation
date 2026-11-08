@@ -1,5 +1,10 @@
 # Invoice Automation — Junior Automation Developer Technical Test
 
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![OCR](https://img.shields.io/badge/OCR-Google%20Cloud%20Vision-green)
+![Browser automation](https://img.shields.io/badge/browser-Selenium-orange)
+![Database](https://img.shields.io/badge/database-SQLite-lightgrey)
+
 End-to-end Python automation for processing vendor invoices:
 
 ```
@@ -154,6 +159,23 @@ Exit codes: `0` = run completed (per-invoice failures are recorded in
 credential problem that must be fixed first.
 
 ## How an invoice flows
+
+```mermaid
+flowchart LR
+    A[Invoice email] --> B[IMAP intake]
+    B --> C[Google Vision OCR]
+    C --> D[Regex extraction]
+    D --> E[(SQLite database)]
+    E --> F{PO validation}
+    F -- no match --> R[REJECTED + archived]
+    F -- match, above threshold --> G[Approval email]
+    G -- APPROVE --> P[ERP form posting]
+    G -- REJECT --> R
+    F -- match, within threshold --> P
+    P --> X[Excel exports]
+```
+
+Sample exports produced by the demo run are in [`examples/`](examples/).
 
 1. **Intake** — attachment saved to `inbox/`; the email is marked read
    only after its attachments are safely stored.
