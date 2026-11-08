@@ -33,6 +33,12 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+BASE = Path(__file__).resolve().parent
+# Modul-modul pendukung tinggal di folder app/ (satu folder, satu peran);
+# daftarkan ke sys.path supaya import antar-modul tetap sederhana dan
+# `python main.py` dari folder proyek tetap menjadi cara menjalankannya.
+sys.path.insert(0, str(BASE / "app"))
+
 import approval
 from config_loader import env, load_config, load_env
 from database import (find_by_invoice_number, get_invoice, init_db,
@@ -45,7 +51,6 @@ from mail_client import MailError
 from po_validation import load_purchase_orders, validate
 from vision_ocr import VisionError, ocr_image
 
-BASE = Path(__file__).resolve().parent
 PROCESSED_DIR = BASE / "output" / "Processed"
 
 # Teks OCR dari 3 invoice contoh — persis seperti tertulis di gambarnya.
@@ -298,8 +303,8 @@ def main():
                         help="sumber gambar invoice (default: email)")
     parser.add_argument("--folder", default="inbox",
                         help="folder gambar bila --source folder")
-    parser.add_argument("--config", default=str(BASE / "Config.xlsx"))
-    parser.add_argument("--po", default=str(BASE / "PurchaseOrders.csv"))
+    parser.add_argument("--config", default=str(BASE / "config" / "Config.xlsx"))
+    parser.add_argument("--po", default=str(BASE / "config" / "PurchaseOrders.csv"))
     parser.add_argument("--wait-approval", type=int, default=None,
                         help="menit menunggu balasan approval (default dari"
                              " .env APPROVAL_WAIT_MINUTES atau 0)")

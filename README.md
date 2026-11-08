@@ -45,7 +45,7 @@ Prerequisites: **Python 3.10+** and **Google Chrome**.
 5. **Create the ERP form and fill in `Config.xlsx`** — a Google Form
    or Microsoft Form with the 8 short-answer questions listed in
    *Setup → 2*; then paste its URL into `FormsUrl`, set
-   `ApproverEmail`, and check `ThresholdAmount`.
+   `ApproverEmail`, and check `ThresholdAmount` (file: `config/Config.xlsx`).
 6. **Run it**:
 
    ```bash
@@ -67,20 +67,25 @@ Prerequisites: **Python 3.10+** and **Google Chrome**.
 
 ## Project structure
 
-| File | Responsibility |
+| Path | Responsibility |
 |---|---|
-| `main.py` | Orchestrates the pipeline; CLI entry point |
-| `config_loader.py` | Reads `Config.xlsx` (business config) and `.env` (secrets) |
-| `email_intake.py` | IMAP: downloads image attachments from unread emails |
-| `mail_client.py` | Shared IMAP/SMTP connection helpers |
-| `vision_ocr.py` | Google Cloud Vision OCR (API key via REST, or service account via SDK) |
-| `extractor.py` | Regex extraction of InvoiceNumber, VendorName, PO_Number, Amount, Currency |
-| `po_validation.py` | Validates an invoice against `PurchaseOrders.csv` |
-| `database.py` | SQLite storage: `invoices` + `process_logs` tables |
-| `approval.py` | Sends approval requests (SMTP) and reads APPROVE/REJECT replies (IMAP) |
-| `erp_posting.py` | Selenium: fills and submits the ERP simulation form |
-| `exporters.py` | Exports `Invoices.xlsx`, `ERP_Dummy.xlsx`, `ProcessLogs.xlsx` from the database |
+| `main.py` | Entry point and pipeline orchestrator — run this file |
+| `app/` | Supporting modules, one per pipeline step (below) |
+| `app/config_loader.py` | Reads `config/Config.xlsx` (business config) and `.env` (secrets) |
+| `app/email_intake.py` | IMAP: downloads image attachments from unread emails |
+| `app/mail_client.py` | Shared IMAP/SMTP connection helpers |
+| `app/vision_ocr.py` | Google Cloud Vision OCR (API key via REST, or service account via SDK) |
+| `app/extractor.py` | Regex extraction of InvoiceNumber, VendorName, PO_Number, Amount, Currency |
+| `app/po_validation.py` | Validates an invoice against `config/PurchaseOrders.csv` |
+| `app/database.py` | SQLite storage: `invoices` + `process_logs` tables |
+| `app/approval.py` | Sends approval requests (SMTP) and reads APPROVE/REJECT replies (IMAP) |
+| `app/erp_posting.py` | Selenium: fills and submits the ERP simulation form |
+| `app/exporters.py` | Exports `Invoices.xlsx`, `ERP_Dummy.xlsx`, `ProcessLogs.xlsx` from the database |
+| `config/Config.xlsx` | Business configuration: threshold, approver email, form URL |
+| `config/PurchaseOrders.csv` | PO master data used for validation |
 | `samples/` | The 3 sample invoice images from the test pack |
+| `examples/` | Sample exports produced by the demo run |
+| `inbox/`, `output/` | Runtime folders, created automatically (contents are git-ignored) |
 
 ## Setup in detail
 
@@ -115,7 +120,7 @@ keep the words in the question titles):
 7. `ApprovalStatus`
 8. `PostingRef`
 
-Then in `Config.xlsx`:
+Then in `config/Config.xlsx`:
 
 - `FormsUrl` — paste your form's URL (replaces the placeholder).
 - `ApproverEmail` — the approver's real email (replaces the example).
@@ -125,7 +130,7 @@ Then in `Config.xlsx`:
 
 ### 3. Reference data
 
-`PurchaseOrders.csv` is the PO master data used for validation
+`config/PurchaseOrders.csv` is the PO master data used for validation
 (PO number, vendor, total amount, currency, active flag).
 
 ## Running
